@@ -1,0 +1,53 @@
+slack_get_profile:
+  url: https://slack.com/api/users.profile.get
+  method: GET
+  headers:
+    authorization: !secret slack_user_oauth_token
+    accept: "application/json, text/html"
+  verify_ssl: true
+
+slack_set_status:
+  url: https://slack.com/api/users.profile.set
+  method: POST
+  headers:
+    authorization: !secret slack_user_oauth_token
+    accept: "application/json, text/html"
+  payload: '{ "profile": { "status_text": "{{ status }}", "status_emoji": "{{ emoji }}", "status_expiration": {{ expiration | default(0) }} } }'
+  content_type:  'application/json; charset=utf-8'
+  verify_ssl: true
+
+slack_clear_status:
+  url: https://slack.com/api/users.profile.set
+  method: POST
+  headers:
+    authorization: !secret slack_user_oauth_token
+    accept: "application/json, text/html"
+  payload: '{ "profile": { "status_text": "", "status_emoji": "", "status_expiration": 0 } }'
+  content_type:  'application/json; charset=utf-8'
+  verify_ssl: true
+
+slack_get_dnd:
+  url: https://slack.com/api/dnd.info
+  method: GET
+  headers:
+    authorization: !secret slack_user_oauth_token
+    accept: "application/json, text/html"
+  verify_ssl: true
+
+slack_set_snooze:
+  url: https://slack.com/api/dnd.setSnooze
+  method: POST
+  headers:
+    authorization: !secret slack_user_oauth_token
+    accept: "application/json, text/html"
+  payload: '{ "num_minutes": {{ minutes }} }'
+  content_type:  'application/json; charset=utf-8'
+  verify_ssl: true
+
+slack_end_snooze:
+  url: https://slack.com/api/dnd.endSnooze
+  method: POST
+  headers:
+    authorization: !secret slack_user_oauth_token
+    accept: "application/json, text/html"
+  verify_ssl: true

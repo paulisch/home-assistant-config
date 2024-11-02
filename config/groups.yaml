@@ -1,0 +1,23 @@
+family:
+  name: Family
+  icon: mdi:account-group
+  entities:
+    - person.paul_schmutz
+
+family-presence:
+  name: Family Presence
+  icon: mdi:account-group
+  entities:
+    - device_tracker.samsung_s21_ultra_von_paul
+
+family-is-home:
+  name: Family is home
+  icon: mdi:home
+  entities:
+    - binary_sensor.paul_home
+
+family-sleep-status:
+  name: Family Sleep Status
+  icon: mdi:sleep
+  entities:
+    - binary_sensor.paul_asleep

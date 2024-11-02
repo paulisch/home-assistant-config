@@ -1,0 +1,22 @@
+
+# Loads default set of integrations. Do not remove.
+default_config:
+
+# Load frontend themes from the themes folder
+frontend:
+  themes: !include_dir_merge_named themes
+
+automation: !include automations.yaml
+sensor: !include_dir_merge_list sensors
+template: !include_dir_merge_list templates
+binary_sensor: !include_dir_merge_list binary_sensors
+group: !include groups.yaml
+script: !include scripts.yaml
+scene: !include scenes.yaml
+
+python_script: !include_dir_merge_list python_scripts
+
+rest_command: !include_dir_merge_named rest_commands
+
+logger:
+  default: info

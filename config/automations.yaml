@@ -1,0 +1,1042 @@
+- id: '1729811551530'
+  alias: Bedroom Motion Detected
+  description: ''
+  triggers:
+  - trigger: state
+    entity_id:
+    - binary_sensor.bedroom_motion_occupancy
+    from: 'off'
+    to: 'on'
+  conditions:
+  - condition: numeric_state
+    entity_id: sensor.bedroom_motion_illuminance_lux
+    below: 4
+  - condition: state
+    entity_id: input_boolean.bedroom_motion_toggle
+    state: 'on'
+  - condition: state
+    entity_id: input_boolean.is_exiting_alarm
+    state: 'off'
+  actions:
+  - action: light.turn_on
+    metadata: {}
+    data: {}
+    target:
+      area_id: bedroom
+  mode: single
+- id: '1729811685415'
+  alias: Bedroom Motion Lost
+  description: ''
+  triggers:
+  - trigger: state
+    entity_id:
+    - binary_sensor.bedroom_motion_occupancy
+    for:
+      hours: 0
+      minutes: 0
+      seconds: 30
+    from: 'on'
+    to: 'off'
+  conditions:
+  - condition: state
+    entity_id: input_boolean.bedroom_motion_toggle
+    state: 'on'
+  - condition: state
+    entity_id: input_boolean.is_exiting_alarm
+    state: 'off'
+  actions:
+  - action: light.turn_off
+    metadata: {}
+    data: {}
+    target:
+      area_id: bedroom
+  mode: single
+- id: '1729844801419'
+  alias: Bathroom Motion Detected
+  description: ''
+  triggers:
+  - trigger: state
+    entity_id:
+    - binary_sensor.0x001788010df8395d_occupancy
+    from: 'off'
+    to: 'on'
+  conditions:
+  - condition: numeric_state
+    entity_id: sensor.0x001788010df8395d_illuminance_lux
+    below: 2
+  actions:
+  - action: light.turn_on
+    metadata: {}
+    data: {}
+    target:
+      area_id: bathroom
+  mode: single
+- id: '1729845004768'
+  alias: Bathroom Motion Lost
+  description: ''
+  triggers:
+  - trigger: state
+    entity_id:
+    - binary_sensor.0x001788010df8395d_occupancy
+    for:
+      hours: 0
+      minutes: 5
+      seconds: 0
+    from: 'on'
+    to: 'off'
+  conditions: []
+  actions:
+  - action: light.turn_off
+    metadata: {}
+    data: {}
+    target:
+      area_id: bathroom
+  mode: single
+- id: '1729852302687'
+  alias: Turn Off Lights When Family Leaves Home
+  description: ''
+  triggers:
+  - trigger: state
+    entity_id:
+    - group.family_presence
+    to: not_home
+    for:
+      hours: 0
+      minutes: 5
+      seconds: 0
+    from: home
+  conditions: []
+  actions:
+  - action: light.turn_off
+    metadata: {}
+    data: {}
+    target:
+      floor_id: main
+  mode: single
+- id: '1729852678988'
+  alias: Living Room Evening Lighting
+  description: ''
+  triggers:
+  - trigger: state
+    entity_id:
+    - sun.sun
+    to: below_horizon
+    from: above_horizon
+  conditions:
+  - condition: state
+    entity_id: group.family_presence
+    state: home
+  actions:
+  - action: light.turn_on
+    metadata: {}
+    data: {}
+    target:
+      area_id: office
+  - action: input_boolean.turn_off
+    metadata: {}
+    data: {}
+    target:
+      entity_id: input_boolean.office_motion_toggle
+  mode: single
+- id: '1729854397216'
+  alias: Trash Reminder
+  description: ''
+  triggers:
+  - trigger: calendar
+    entity_id: calendar.abfuhrtermine_wallsee_sindelburg_augustusstrasse_4
+    event: start
+    offset: '-12:0:0'
+  conditions: []
+  actions:
+  - action: notify.mobile_app_sm_g998b
+    data:
+      title: '{{ (trigger.calendar_event.start | as_datetime).strftime(''%d.%m.%Y'')
+        }}: {{ trigger.calendar_event.summary }} '
+      message: Take out trash
+  mode: single
+- id: '1729866101437'
+  alias: Family Comes Home
+  description: ''
+  triggers:
+  - trigger: state
+    entity_id:
+    - group.family_presence
+    from: not_home
+    to: home
+  conditions:
+  - condition: state
+    entity_id: sun.sun
+    state: below_horizon
+  - condition: state
+    entity_id: group.family_sleep_status
+    state: 'off'
+  actions:
+  - action: automation.trigger
+    target:
+      entity_id: automation.living_room_evening_lighting
+    data:
+      skip_condition: true
+  mode: single
+- id: '1730046291743'
+  alias: Family Goes To Sleep
+  description: ''
+  triggers:
+  - trigger: state
+    entity_id:
+    - group.family_sleep_status
+    from: 'off'
+    to: 'on'
+  conditions: []
+  actions:
+  - target:
+      entity_id: switch.adaptive_lighting_sleep_mode
+    action: switch.turn_on
+    data: {}
+  mode: single
+- id: '1730046561269'
+  alias: Family Wakes Up
+  description: ''
+  triggers:
+  - trigger: state
+    entity_id:
+    - group.family_sleep_status
+    from: 'on'
+    to: 'off'
+  conditions: []
+  actions:
+  - action: switch.turn_off
+    target:
+      entity_id:
+      - switch.adaptive_lighting_sleep_mode
+    data: {}
+  mode: single
+- id: '1730075733770'
+  alias: Turn Off Alarm When Bedside Lamp Off
+  description: ''
+  triggers:
+  - trigger: state
+    entity_id:
+    - light.mibedsidelamp2_ff77_mijia_bedside_lamp_sw_auth
+    to: 'off'
+    from: 'on'
+  conditions:
+  - condition: state
+    entity_id: input_boolean.is_alarm_running
+    state: 'on'
+  - condition: state
+    entity_id: input_boolean.is_exiting_alarm
+    state: 'off'
+  actions:
+  - action: script.turn_on
+    metadata: {}
+    data:
+      variables:
+        cancellation_token: wakeup_light_cancellation_token
+    target:
+      entity_id: script.stop_light_transition
+  - action: script.turn_on
+    metadata: {}
+    data: {}
+    target:
+      entity_id: script.restore_bedroom_motion_and_al
+  - action: input_boolean.turn_off
+    metadata: {}
+    data: {}
+    target:
+      entity_id: input_boolean.is_alarm_running
+  mode: single
+- id: '1730077183328'
+  alias: Turn Off Alarm When Motion Detected
+  description: ''
+  triggers:
+  - trigger: state
+    entity_id:
+    - binary_sensor.bedroom_motion_occupancy
+    from: 'off'
+    to: 'on'
+  conditions:
+  - condition: state
+    entity_id: input_boolean.is_alarm_running
+    state: 'on'
+  - condition: state
+    entity_id: input_boolean.is_exiting_alarm
+    state: 'off'
+  actions:
+  - action: input_boolean.turn_on
+    target:
+      entity_id: input_boolean.is_exiting_alarm
+    data: {}
+  - action: script.turn_on
+    metadata: {}
+    data:
+      variables:
+        cancellation_token: wakeup_light_cancellation_token
+    target:
+      entity_id: script.stop_light_transition
+  - action: light.turn_on
+    metadata: {}
+    data:
+      rgb_color:
+      - 0
+      - 249
+      - 0
+    target:
+      entity_id: light.bedroom_lights
+  - delay:
+      hours: 0
+      minutes: 0
+      seconds: 10
+      milliseconds: 0
+  - action: light.turn_off
+    target:
+      entity_id:
+      - light.bedroom_lights
+    data: {}
+  - action: script.turn_on
+    metadata: {}
+    data: {}
+    target:
+      entity_id: script.restore_bedroom_motion_and_al
+  - action: light.turn_on
+    metadata: {}
+    data: {}
+    target:
+      entity_id: light.bedroom_lights
+  - delay:
+      hours: 0
+      minutes: 0
+      seconds: 20
+      milliseconds: 0
+  - action: light.turn_off
+    metadata: {}
+    data: {}
+    target:
+      entity_id: light.bedroom_lights
+  - action: input_boolean.turn_off
+    target:
+      entity_id:
+      - input_boolean.is_exiting_alarm
+    data: {}
+  - action: input_boolean.turn_off
+    metadata: {}
+    data: {}
+    target:
+      entity_id: input_boolean.is_alarm_running
+  mode: single
+- id: '1730103450403'
+  alias: Turn Off Lights When Family Goes To Sleep
+  description: ''
+  triggers:
+  - trigger: state
+    entity_id:
+    - group.family_sleep_status
+    from: 'off'
+    to: 'on'
+    for:
+      hours: 0
+      minutes: 3
+      seconds: 0
+  conditions: []
+  actions:
+  - action: light.turn_off
+    target:
+      floor_id: main
+    data: {}
+  mode: single
+- id: '1730105156953'
+  alias: Wakeup Light
+  description: ''
+  triggers:
+  - trigger: time
+    at: sensor.alarm_time_timestamp
+  conditions:
+  - condition: state
+    entity_id: input_boolean.toggle_alarm
+    state: 'on'
+  - condition: state
+    entity_id: group.family_presence
+    state: home
+  - condition: state
+    entity_id: group.family_sleep_status
+    state: 'on'
+  - condition: state
+    entity_id: input_boolean.is_alarm_running
+    state: 'off'
+  actions:
+  - action: input_boolean.turn_on
+    metadata: {}
+    data: {}
+    target:
+      entity_id: input_boolean.is_alarm_running
+  - action: input_boolean.turn_off
+    target:
+      entity_id:
+      - input_boolean.bedroom_motion_toggle
+    data: {}
+  - action: switch.turn_off
+    metadata: {}
+    data: {}
+    target:
+      entity_id: switch.adaptive_lighting_al_bedroom
+  - action: light.turn_on
+    metadata: {}
+    data:
+      brightness_pct: 1
+      kelvin: 2000
+    target:
+      entity_id: light.bedroom_lights
+  - action: script.turn_on
+    metadata: {}
+    target:
+      entity_id: script.light_transition
+    data:
+      variables:
+        entity_id: light.bedroom_lights
+        cancellation_token: wakeup_light_cancellation_token
+        brightness_pct: 100
+        kelvin: 6500
+        transition: '{{ states(''input_text.alarm_duration'') }}'
+  mode: single
+- id: '1730135002301'
+  alias: Wakeup Light Cooldown
+  description: ''
+  triggers:
+  - trigger: time
+    at: sensor.alarm_time_timestamp_cooldown
+  conditions:
+  - condition: state
+    entity_id: input_boolean.is_exiting_alarm
+    state: 'off'
+  - condition: state
+    entity_id: input_boolean.is_alarm_running
+    state: 'on'
+  actions:
+  - action: script.turn_on
+    metadata: {}
+    target:
+      entity_id: script.restore_bedroom_motion_and_al
+    data: {}
+  - action: light.turn_off
+    metadata: {}
+    data: {}
+    target:
+      entity_id: light.bedroom_lights
+  - action: input_boolean.turn_off
+    metadata: {}
+    data: {}
+    target:
+      entity_id: input_boolean.is_alarm_running
+  mode: single
+- id: '1730145458338'
+  alias: Turn Off Office Desk Smart Plug When Family Leaves Home
+  description: ''
+  triggers:
+  - trigger: state
+    entity_id:
+    - group.family_presence
+    to: not_home
+    for:
+      hours: 2
+      minutes: 0
+      seconds: 0
+    from: home
+  conditions:
+  - condition: state
+    entity_id: switch.office_desk_smart_plug
+    state: 'on'
+  - condition: or
+    conditions:
+    - condition: state
+      entity_id: device_tracker.macbook_pro_paul
+      state: not_home
+    - condition: state
+      entity_id: binary_sensor.pauls_macbook_pro_active
+      state: 'off'
+  actions:
+  - action: switch.turn_off
+    metadata: {}
+    data: {}
+    target:
+      entity_id: switch.office_desk_smart_plug
+  mode: single
+- id: '1730146690944'
+  alias: Turn Off Office Desk Smart Plug When Family Goes To Sleep
+  description: ''
+  triggers:
+  - trigger: state
+    entity_id:
+    - group.family_sleep_status
+    from: 'off'
+    to: 'on'
+    for:
+      hours: 1
+      minutes: 0
+      seconds: 0
+  conditions:
+  - condition: state
+    entity_id: switch.office_desk_smart_plug
+    state: 'on'
+  - condition: or
+    conditions:
+    - condition: state
+      entity_id: binary_sensor.pauls_macbook_pro_active
+      state: 'off'
+    - condition: state
+      entity_id: device_tracker.macbook_pro_paul
+      state: not_home
+  actions:
+  - action: switch.turn_off
+    metadata: {}
+    data: {}
+    target:
+      entity_id: switch.office_desk_smart_plug
+  mode: single
+- id: '1730194417751'
+  alias: Office Motion Detected
+  description: ''
+  triggers:
+  - trigger: state
+    entity_id:
+    - binary_sensor.office_motion_occupancy
+    from: 'off'
+    to: 'on'
+  conditions:
+  - condition: numeric_state
+    entity_id: sensor.office_motion_illuminance_lux
+    below: 10
+  - condition: state
+    entity_id: input_boolean.office_motion_toggle
+    state: 'on'
+  actions:
+  - action: light.turn_on
+    metadata: {}
+    data: {}
+    target:
+      area_id: office
+  mode: single
+- id: '1730196962600'
+  alias: Office Motion Lost
+  description: ''
+  triggers:
+  - trigger: state
+    entity_id:
+    - binary_sensor.office_motion_occupancy
+    for:
+      hours: 0
+      minutes: 3
+      seconds: 0
+    from: 'on'
+    to: 'off'
+  conditions:
+  - condition: state
+    entity_id: input_boolean.office_motion_toggle
+    state: 'on'
+  actions:
+  - action: light.turn_off
+    metadata: {}
+    data: {}
+    target:
+      area_id:
+      - office
+  mode: single
+- id: '1730238037931'
+  alias: Turn On Motion Toggles
+  description: ''
+  triggers:
+  - trigger: state
+    entity_id:
+    - group.family_sleep_status
+    from: 'off'
+    to: 'on'
+    for:
+      hours: 0
+      minutes: 3
+      seconds: 0
+  - trigger: state
+    entity_id:
+    - group.family_sleep_status
+    from: 'on'
+    to: 'off'
+    for:
+      hours: 0
+      minutes: 0
+      seconds: 0
+  - trigger: state
+    entity_id:
+    - group.family_is_home
+    from: not_home
+    to: home
+  - trigger: state
+    entity_id:
+    - group.family_is_home
+    from: home
+    to: not_home
+    for:
+      hours: 0
+      minutes: 5
+      seconds: 0
+  conditions: []
+  actions:
+  - action: input_boolean.turn_on
+    data: {}
+    target:
+      entity_id:
+      - input_boolean.office_motion_toggle
+      - input_boolean.bedroom_motion_toggle
+  mode: single
+- id: '1730303335496'
+  alias: Notification when HASS Google Drive Backup fails
+  description: ''
+  triggers:
+  - trigger: state
+    entity_id:
+    - binary_sensor.backups_stale
+    to: 'on'
+  conditions: []
+  actions:
+  - action: notify.mobile_app_sm_g998b
+    data:
+      message: Backups failed!
+      title: HASS Google Drive Backup
+  mode: single
+- id: '1730320109106'
+  alias: Set Workday Detector based on Calendar
+  description: ''
+  triggers:
+  - trigger: calendar
+    entity_id: calendar.workday_sensor
+    event: start
+    offset: 0:0:0
+  - trigger: calendar
+    entity_id: calendar.workday_sensor
+    event: end
+    offset: 0:0:0
+  - trigger: calendar
+    entity_id: calendar.paul_powerus_de
+    event: start
+    offset: 0:0:0
+  - trigger: calendar
+    entity_id: calendar.paul_powerus_de
+    event: end
+    offset: 0:0:0
+  - trigger: time
+    at: 00:01:00
+  conditions: []
+  actions:
+  - action: calendar.get_events
+    metadata: {}
+    data:
+      duration:
+        hours: 0
+        minutes: 0
+        seconds: 1
+    response_variable: current_events
+    target:
+      entity_id:
+      - calendar.workday_sensor
+      - calendar.paul_powerus_de
+  - if:
+    - condition: template
+      value_template: '{{ current_events[''calendar.workday_sensor''].events | selectattr(''summary'',
+        ''equalto'', ''off'') | list | length > 0 or current_events[''calendar.paul_powerus_de''].events
+        | selectattr(''summary'', ''equalto'', ''Abwesend'') | list | length > 0 or
+        current_events[''calendar.paul_powerus_de''].events | selectattr(''summary'',
+        ''equalto'', ''Vacation'') | list | length > 0 or current_events[''calendar.paul_powerus_de''].events
+        | selectattr(''summary'', ''equalto'', ''Public Holiday in Austria'') | list
+        | length > 0 }}'
+    then:
+    - action: input_boolean.turn_off
+      metadata: {}
+      data: {}
+      target:
+        entity_id: input_boolean.ultimate_workday_detector
+    else:
+    - if:
+      - condition: state
+        entity_id: binary_sensor.workday_detector
+        state: 'on'
+      then:
+      - action: input_boolean.turn_on
+        metadata: {}
+        data: {}
+        target:
+          entity_id: input_boolean.ultimate_workday_detector
+      else:
+      - action: input_boolean.turn_off
+        metadata: {}
+        data: {}
+        target:
+          entity_id: input_boolean.ultimate_workday_detector
+  mode: single
+- id: '1730412149459'
+  alias: Bed Time Reminder
+  description: ''
+  triggers:
+  - trigger: time
+    at: sensor.bed_time_reminder_timestamp
+  conditions:
+  - condition: state
+    entity_id: input_boolean.toggle_alarm
+    state: 'on'
+  - condition: state
+    entity_id: group.family_presence
+    state: home
+  - condition: state
+    entity_id: group.family_sleep_status
+    state: 'off'
+  actions:
+  - action: light.turn_on
+    metadata: {}
+    data:
+      brightness_pct: 10
+      effect: Bedtime
+    target:
+      entity_id: light.office_neon_strip_light
+  mode: single
+- id: '1730486393169'
+  alias: Start Work and Workday Timers on Button Click
+  description: ''
+  triggers:
+  - trigger: state
+    entity_id:
+    - sensor.work_button_action
+    - input_button.work_timer_virtual_button
+  conditions:
+  - condition: state
+    entity_id: input_boolean.ultimate_workday_detector
+    state: 'on'
+  - condition: state
+    entity_id: timer.workday_timer
+    state: idle
+  actions:
+  - action: timer.cancel
+    metadata: {}
+    data: {}
+    target:
+      entity_id:
+      - timer.work_timer
+      - timer.move_timer
+  - action: timer.start
+    metadata: {}
+    data: {}
+    target:
+      entity_id:
+      - timer.work_timer
+      - timer.workday_timer
+  mode: single
+- id: '1730492575314'
+  alias: Reset Work Timers
+  description: ''
+  triggers:
+  - trigger: state
+    entity_id:
+    - input_boolean.ultimate_workday_detector
+    from: 'on'
+    to: 'off'
+    for:
+      hours: 0
+      minutes: 2
+      seconds: 0
+    enabled: true
+  - trigger: time
+    at: 00:00:00
+  - trigger: event
+    event_type: timer.finished
+    event_data:
+      entity_id: timer.workday_timer
+  conditions: []
+  actions:
+  - action: script.turn_on
+    metadata: {}
+    data: {}
+    target:
+      entity_id: script.cancel_work_timers
+  mode: single
+- id: '1730493127368'
+  alias: Pause and Resume Workday Timer
+  description: ''
+  triggers:
+  - trigger: calendar
+    entity_id: calendar.paul_powerus_de
+    event: start
+    offset: -0:0:0
+    id: start
+  - trigger: calendar
+    entity_id: calendar.paul_powerus_de
+    event: end
+    offset: 0:0:0
+    id: end
+  conditions:
+  - condition: or
+    conditions:
+    - condition: state
+      entity_id: timer.workday_timer
+      state: active
+    - condition: state
+      entity_id: timer.workday_timer
+      state: paused
+  actions:
+  - condition: template
+    value_template: '{{ trigger.calendar_event.summary == ''OOO'' or trigger.calendar_event.summary
+      == ''Lunch'' }}'
+  - choose:
+    - conditions:
+      - condition: trigger
+        id:
+        - start
+      - condition: state
+        entity_id: timer.workday_timer
+        state: active
+      sequence:
+      - action: timer.pause
+        metadata: {}
+        data: {}
+        target:
+          entity_id: timer.workday_timer
+      - action: timer.cancel
+        metadata: {}
+        data: {}
+        target:
+          entity_id:
+          - timer.move_timer
+          - timer.work_timer
+    - conditions:
+      - condition: trigger
+        id:
+        - end
+      - condition: state
+        entity_id: timer.workday_timer
+        state: paused
+      sequence:
+      - action: timer.cancel
+        metadata: {}
+        data: {}
+        target:
+          entity_id:
+          - timer.work_timer
+          - timer.move_timer
+      - action: timer.start
+        metadata: {}
+        data: {}
+        target:
+          entity_id:
+          - timer.workday_timer
+          - timer.work_timer
+  mode: single
+- id: '1730495684823'
+  alias: Cycle Between Work and Move on Button Click
+  description: ''
+  triggers:
+  - trigger: state
+    entity_id:
+    - input_button.work_timer_virtual_button
+    - sensor.work_button_action
+  conditions:
+  - condition: state
+    entity_id: timer.workday_timer
+    state: active
+  actions:
+  - if:
+    - condition: state
+      entity_id: timer.move_timer
+      state: active
+    then:
+    - action: timer.finish
+      metadata: {}
+      data: {}
+      target:
+        entity_id: timer.move_timer
+    else:
+    - if:
+      - condition: state
+        entity_id: timer.work_timer
+        state: active
+      then:
+      - action: timer.pause
+        metadata: {}
+        data: {}
+        target:
+          entity_id: timer.work_timer
+      else:
+      - if:
+        - condition: state
+          entity_id: timer.work_timer
+          state: paused
+        then:
+        - action: timer.finish
+          metadata: {}
+          data: {}
+          target:
+            entity_id: timer.work_timer
+  mode: single
+- id: '1730496410818'
+  alias: Resume Work and Workday Timers on Button Click
+  description: ''
+  triggers:
+  - trigger: state
+    entity_id:
+    - input_button.work_timer_virtual_button
+    - sensor.work_button_action
+  conditions:
+  - condition: state
+    entity_id: timer.workday_timer
+    state: paused
+  actions:
+  - action: timer.cancel
+    metadata: {}
+    data: {}
+    target:
+      entity_id:
+      - timer.move_timer
+      - timer.work_timer
+  - action: timer.start
+    metadata: {}
+    data: {}
+    target:
+      entity_id:
+      - timer.workday_timer
+      - timer.work_timer
+  mode: single
+- id: '1730497056472'
+  alias: Start Move Timer When Work Timer Finishes
+  description: ''
+  triggers:
+  - trigger: event
+    event_type: timer.finish
+    event_data:
+      entity_id: timer.work_timer
+  conditions:
+  - condition: state
+    entity_id: timer.workday_timer
+    state: active
+  actions:
+  - action: timer.start
+    metadata: {}
+    data: {}
+    target:
+      entity_id: timer.move_timer
+  mode: single
+- id: '1730497107493'
+  alias: Start Work Timer When Move Timer Finishes
+  description: ''
+  triggers:
+  - trigger: event
+    event_type: timer.finish
+    event_data:
+      entity_id: timer.move_timer
+  conditions:
+  - condition: state
+    entity_id: timer.workday_timer
+    state: active
+  actions:
+  - action: timer.start
+    metadata: {}
+    data: {}
+    target:
+      entity_id:
+      - timer.work_timer
+  mode: single
+- id: '1730555080392'
+  alias: Notion Get Test Page
+  description: ''
+  triggers: []
+  conditions: []
+  actions:
+  - action: rest_command.notion_get_page
+    metadata: {}
+    data:
+      page_id: 1326f7410993800bb5afe1b8800b51fb
+    response_variable: notion_get_page_response
+  mode: single
+- id: '1730560817562'
+  alias: Set Slack Status based on Calendar
+  description: ''
+  triggers:
+  - trigger: calendar
+    entity_id: calendar.paul_powerus_de
+    event: start
+    offset: 0:0:0
+  - trigger: calendar
+    entity_id: calendar.test
+    event: start
+    offset: 0:0:0
+  conditions: []
+  actions:
+  - choose:
+    - conditions:
+      - condition: template
+        value_template: '{{ trigger.calendar_event.summary == ''OOO'' }}'
+      sequence:
+      - action: rest_command.slack_set_status
+        metadata: {}
+        data:
+          status: Out of office
+          emoji: ':ooo:'
+          expiration: '{% set end_date = strptime(trigger.calendar_event.end, "%Y-%m-%dT%H:%M:%S%z")
+            %} {{ end_date.timestamp() | int }}'
+      - action: rest_command.slack_set_snooze
+        metadata: {}
+        data:
+          minutes: '{% set start_date = strptime(trigger.calendar_event.start, "%Y-%m-%dT%H:%M:%S%z")
+            %} {% set end_date = strptime(trigger.calendar_event.end, "%Y-%m-%dT%H:%M:%S%z")
+            %} {% set difference = end_date - start_date %} {{ difference.total_seconds()
+            / 60 | int }}'
+      alias: OOO
+    - conditions:
+      - condition: template
+        value_template: '{{ trigger.calendar_event.summary == ''Vacation'' }}'
+      sequence:
+      - action: rest_command.slack_set_status
+        metadata: {}
+        data:
+          status: Vacationing
+          emoji: ':palm_tree:'
+          expiration: '{% set end_date = strptime(trigger.calendar_event.end, "%Y-%m-%dT%H:%M:%S%z")
+            %} {{ end_date.timestamp() | int }}'
+      - action: rest_command.slack_set_snooze
+        metadata: {}
+        data:
+          minutes: '{% set start_date = strptime(trigger.calendar_event.start, "%Y-%m-%dT%H:%M:%S%z")
+            %} {% set end_date = strptime(trigger.calendar_event.end, "%Y-%m-%dT%H:%M:%S%z")
+            %} {% set difference = end_date - start_date %} {{ difference.total_seconds()
+            / 60 | int }}'
+      alias: Vacation
+    - conditions:
+      - condition: template
+        value_template: '{{ trigger.calendar_event.summary == ''Public Holiday in Austria'' }}'
+      sequence:
+      - action: rest_command.slack_set_status
+        metadata: {}
+        data:
+          status: Public Holiday in Austria
+          emoji: ':kangaroo:'
+          expiration: '{% set end_date = strptime(trigger.calendar_event.end, "%Y-%m-%dT%H:%M:%S%z")
+            %} {{ end_date.timestamp() | int }}'
+      - action: rest_command.slack_set_snooze
+        metadata: {}
+        data:
+          minutes: '{% set start_date = strptime(trigger.calendar_event.start, "%Y-%m-%dT%H:%M:%S%z")
+            %} {% set end_date = strptime(trigger.calendar_event.end, "%Y-%m-%dT%H:%M:%S%z")
+            %} {% set difference = end_date - start_date %} {{ difference.total_seconds()
+            / 60 | int }}'
+      alias: Vacation
+    - conditions:
+      - condition: template
+        value_template: '{{ trigger.calendar_event.summary == ''Sick'' }}'
+      sequence:
+      - action: rest_command.slack_set_status
+        metadata: {}
+        data:
+          status: Out sick
+          emoji: ':face-with-thermometer:'
+          expiration: '{% set end_date = strptime(trigger.calendar_event.end, "%Y-%m-%dT%H:%M:%S%z")
+            %} {{ end_date.timestamp() | int }}'
+      - action: rest_command.slack_set_snooze
+        metadata: {}
+        data:
+          minutes: '{% set start_date = strptime(trigger.calendar_event.start, "%Y-%m-%dT%H:%M:%S%z")
+            %} {% set end_date = strptime(trigger.calendar_event.end, "%Y-%m-%dT%H:%M:%S%z")
+            %} {% set difference = end_date - start_date %} {{ difference.total_seconds()
+            / 60 | int }}'
+      alias: Sick
+  mode: single

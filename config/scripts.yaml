@@ -1,0 +1,148 @@
+restore_bedroom_motion_and_al:
+  alias: Restore Bedroom Motion and AL
+  sequence:
+  - action: switch.turn_on
+    metadata: {}
+    data: {}
+    target:
+      entity_id: switch.adaptive_lighting_al_bedroom
+  - action: input_boolean.turn_on
+    metadata: {}
+    data: {}
+    target:
+      entity_id: input_boolean.bedroom_motion_toggle
+  description: Restores Bedroom Lighting by enabling the Motion Sensor and enabling
+    Adaptive Lighting. Serves as Turn-Off Mechanism when getting up in the morning.
+fade_out_light:
+  alias: Fade Out Light
+  fields:
+    entity_id:
+      selector:
+        text:
+      description: The entity_id of the light
+      required: true
+    transition:
+      selector:
+        text:
+      description: The time to fade out the light in the format 'HH:mm:ss'
+      required: true
+      default: 00:00:10
+    cancellation_token:
+      selector:
+        text:
+      description: The cancellation token for the light
+  sequence:
+  - action: python_script.light_transition
+    target:
+      entity_id: '{{ entity_id }}'
+    data:
+      transition: '{{ transition }}'
+      cancellation_token: '{{ cancellation_token }}'
+      brightness: 0
+light_transition:
+  alias: Light Transition
+  sequence:
+  - action: python_script.light_transition
+    target:
+      entity_id: '{{ entity_id }}'
+    data:
+      transition: '{{ transition }}'
+      cancellation_token: '{{ cancellation_token }}'
+      brightness: '{{ brightness }}'
+      brightness_pct: '{{ brightness_pct }}'
+      kelvin: '{{ kelvin }}'
+  fields:
+    entity_id:
+      selector:
+        text:
+      description: The entity_id of the light
+      required: true
+    transition:
+      selector:
+        text:
+      description: The time to fade out the light in the format 'HH:mm:ss'
+      required: true
+      default: 00:00:10
+    cancellation_token:
+      selector:
+        text:
+      description: The cancellation token for the light
+    brightness:
+      selector:
+        number:
+          min: 0
+          max: 255
+          step: 1
+      description: Brightness to end at (0 - 255)
+      required: false
+      default: None
+    brightness_pct:
+      selector:
+        number:
+          min: 0
+          max: 100
+          step: 1
+      description: Brightness to end at in %
+      required: false
+      default: None
+    kelvin:
+      selector:
+        number:
+          min: 2000
+          max: 6500
+          step: 1
+      description: Kelvin to end at
+  description: ''
+stop_light_transition:
+  alias: Stop Light Transition
+  sequence:
+  - action: python_script.stop_light_transition
+    data:
+      cancellation_token: '{{ cancellation_token }}'
+  fields:
+    cancellation_token:
+      selector:
+        text:
+      description: The cancellation token for the light
+      required: true
+  description: ''
+cancel_work_timers:
+  alias: Cancel Work Timers
+  sequence:
+  - if:
+    - condition: not
+      conditions:
+      - condition: state
+        entity_id: timer.move_timer
+        state: idle
+    then:
+    - action: timer.cancel
+      metadata: {}
+      data: {}
+      target:
+        entity_id: timer.move_timer
+  - if:
+    - condition: not
+      conditions:
+      - condition: state
+        entity_id: timer.work_timer
+        state: idle
+    then:
+    - action: timer.cancel
+      metadata: {}
+      data: {}
+      target:
+        entity_id: timer.work_timer
+  - if:
+    - condition: not
+      conditions:
+      - condition: state
+        entity_id: timer.workday_timer
+        state: idle
+    then:
+    - action: timer.cancel
+      metadata: {}
+      data: {}
+      target:
+        entity_id: timer.workday_timer
+  description: ''
